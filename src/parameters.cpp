@@ -29,7 +29,7 @@ void DWAPlanner::load_params(void)
   local_nh_.param<double>("MIN_YAWRATE", min_yawrate_, 0.05);
   // - O -
   local_nh_.param<double>("OBSTACLE_COST_GAIN", obs_cost_gain_, 1.0);
-  local_nh_.param<double>("OBS_RANGE", obs_range_, 2.5);
+  local_nh_.param<double>("OBS_RANGE", obs_range_, 2.5);    // the range to check obstacles
   // - P -
   local_nh_.param<double>("PATH_COST_GAIN", path_cost_gain_, 0.4);
   local_nh_.param<double>("PREDICT_TIME", predict_time_, 3.0);
