@@ -1,26 +1,27 @@
 # Target Parameters
-TARGET_VELOCITY: 0.55 # [m/s]
+TARGET_VELOCITY: 1.0 # [m/s]
 
 # Simulation Parameters
-PREDICT_TIME: 3.0     # [s]
-SIM_TIME_SAMPLES: 10
-SIM_PERIOD: 0.1       # [s]
-SIM_DIRECTION: 1.57   # [rad]
-SLOW_VELOCITY_TH: 0.1 # [m/s]
-VELOCITY_SAMPLES: 3
-YAWRATE_SAMPLES: 20
+PREDICT_TIME: 3.0     # [s]   # future time to predict
+SIM_TIME_SAMPLES: 20          # how many time steps are used within the prediction time
+SIM_PERIOD: 0.1       # [s]   
+SIM_DIRECTION: 1.57   # [rad]   # the range of angular motion considered
+SLOW_VELOCITY_TH: 0.1 # [m/s]   # a threshold to determine if the robot is moving or not
+VELOCITY_SAMPLES: 100      # how many samples are used to generate trajectories, which determines velocity resolution
+YAWRATE_SAMPLES: 5      # how many samples are used to generate trajectories
+
 
 # Cost Parameters
 OBSTACLE_COST_GAIN: 1.0
 TO_GOAL_COST_GAIN: 0.8
-SPEED_COST_GAIN: 0.4    # If path cost is used, setting the param "SPEED_COST_GAIN" to a value close to the param "PATH_COST_GAIN" may indicate better behavior
+SPEED_COST_GAIN: 0.0    # 0.4 If path cost is used, setting the param "SPEED_COST_GAIN" to a value close to the param "PATH_COST_GAIN" may indicate better behavior
 PATH_COST_GAIN: 0.4     # If path cost is used, set the param "USE_PATH_COST" to true
 ANGLE_RESOLUTION: 0.087 # [rad]
-OBS_RANGE: 2.5          # [m]
+OBS_RANGE: 0.5          # [m]
 
 # Goal Tolerance Parameters
 GOAL_THRESHOLD: 0.1           # [m]
-TURN_DIRECTION_THRESHOLD: 0.1 # [rad]
+TURN_DIRECTION_THRESHOLD: pi # [rad]
 
 # Other Parameters
 ANGLE_TO_GOAL_TH: pi # [rad]
