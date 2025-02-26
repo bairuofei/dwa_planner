@@ -179,49 +179,72 @@ DWAPlanner::dwa_planning(const Eigen::Vector3d &goal, std::vector<std::pair<std:
     const double yawrate_resolution =
         std::max((dynamic_window.max_yawrate_ - dynamic_window.min_yawrate_) / (yawrate_samples_ - 1), DBL_EPSILON);
 
-    int available_traj_count = 0;
-    for (int i = 0; i < velocity_samples_; i++)
-    {
-        const double v = dynamic_window.min_velocity_ + velocity_resolution * i;
-        for (int j = 0; j < yawrate_samples_; j++)
-        {
-            std::pair<std::vector<State>, bool> traj;
-            double y = dynamic_window.min_yawrate_ + yawrate_resolution * j;
-            if (v < slow_velocity_th_)
-                y = y > 0 ? std::max(y, min_yawrate_) : std::min(y, -min_yawrate_);
-            traj.first = generate_trajectory(v, y);
-            const Cost cost = evaluate_trajectory(traj.first, goal);
-            costs.push_back(cost);
-            if (cost.obs_cost_ == 1e6)
-            {
-                traj.second = false;
-            }
-            else
-            {
-                traj.second = true;
-                available_traj_count++;
-            }
-            trajectories.push_back(traj);
-        }
 
-        if (dynamic_window.min_yawrate_ < 0.0 && 0.0 < dynamic_window.max_yawrate_)
+    const double angle_resolution = 2.0 * M_PI / velocity_samples_;
+    int available_traj_count = 0;
+    for (int i = 0; i < velocity_samples_; i++) 
+    {
+        double angle = angle_resolution * i;
+        const double v = dynamic_window.max_velocity_ * std::cos(angle);
+        const double y = dynamic_window.max_velocity_ * std::sin(angle);
+
+        std::pair<std::vector<State>, bool> traj;
+        traj.first = generate_omni_trajectory(v, y);  // generate trajectory with velocity v and yawrate y
+        const Cost cost = evaluate_trajectory(traj.first, goal);
+        costs.push_back(cost);
+        if (cost.obs_cost_ == 1e6)
         {
-            std::pair<std::vector<State>, bool> traj;
-            traj.first = generate_trajectory(v, 0.0);
-            const Cost cost = evaluate_trajectory(traj.first, goal);
-            costs.push_back(cost);
-            if (cost.obs_cost_ == 1e6)
-            {
-                traj.second = false;
-            }
-            else
-            {
-                traj.second = true;
-                available_traj_count++;
-            }
-            trajectories.push_back(traj);
+            traj.second = false;
         }
+        else
+        {
+            traj.second = true;
+            available_traj_count++;
+        }
+        trajectories.push_back(traj);
     }
+    // for (int i = 0; i < velocity_samples_; i++)
+    // {
+    //     const double v = dynamic_window.min_velocity_ + velocity_resolution * i;
+    //     for (int j = 0; j < velocity_samples_; j++)
+    //     {
+    //         std::pair<std::vector<State>, bool> traj;
+    //         double y = dynamic_window.min_velocity_ + velocity_resolution * j;
+    //         // if (v < slow_velocity_th_)
+    //         //     y = y > 0 ? std::max(y, min_yawrate_) : std::min(y, -min_yawrate_);
+    //         traj.first = generate_omni_trajectory(v, y);  // generate trajectory with velocity v and yawrate y
+    //         const Cost cost = evaluate_trajectory(traj.first, goal);
+    //         costs.push_back(cost);
+    //         if (cost.obs_cost_ == 1e6)
+    //         {
+    //             traj.second = false;
+    //         }
+    //         else
+    //         {
+    //             traj.second = true;
+    //             available_traj_count++;
+    //         }
+    //         trajectories.push_back(traj);
+    //     }
+
+    //     if (dynamic_window.min_yawrate_ < 0.0 && 0.0 < dynamic_window.max_yawrate_)
+    //     {
+    //         std::pair<std::vector<State>, bool> traj;
+    //         traj.first = generate_trajectory(v, 0.0);   // additionally consider the straight trajectory
+    //         const Cost cost = evaluate_trajectory(traj.first, goal);
+    //         costs.push_back(cost);
+    //         if (cost.obs_cost_ == 1e6)
+    //         {
+    //             traj.second = false;
+    //         }
+    //         else
+    //         {
+    //             traj.second = true;
+    //             available_traj_count++;
+    //         }
+    //         trajectories.push_back(traj);
+    //     }
+    // }
 
     if (available_traj_count == 0)
     {
@@ -308,6 +331,7 @@ void DWAPlanner::process(void)
         geometry_msgs::Twist cmd_vel;
         if (can_move())
             cmd_vel = calc_cmd_vel();
+        
         velocity_pub_.publish(cmd_vel);
         finish_flag_pub_.publish(has_finished_);
         if (has_finished_.data)
@@ -359,7 +383,7 @@ geometry_msgs::Twist DWAPlanner::calc_cmd_vel(void)
 {
     geometry_msgs::Twist cmd_vel;
     std::pair<std::vector<State>, bool> best_traj;
-    std::vector<std::pair<std::vector<State>, bool>> trajectories;
+    std::vector<std::pair<std::vector<State>, bool>> trajectories;  // this saves all candidate trajectories for visualization
     const size_t trajectories_size = velocity_samples_ * (yawrate_samples_ + 1);
     trajectories.reserve(trajectories_size);
 
@@ -372,7 +396,7 @@ geometry_msgs::Twist DWAPlanner::calc_cmd_vel(void)
     {
         ROS_ERROR("%s", ex.what());
     }
-    // this goal is the final target, not the waypoint. And has been tranformed into local frame
+    // this goal is the final target, not the waypoint. And has been tranformed into robot's local frame
     const Eigen::Vector3d goal(goal_.pose.position.x, goal_.pose.position.y, tf::getYaw(goal_.pose.orientation));
 
     const double angle_to_goal = atan2(goal.y(), goal.x());   
@@ -381,37 +405,20 @@ geometry_msgs::Twist DWAPlanner::calc_cmd_vel(void)
 
     if (dist_to_goal_th_ < goal.segment(0, 2).norm() && !has_reached_)
     {
-        if (can_adjust_robot_direction(goal))   // robot needs inplace rotation
-        {
-            cmd_vel.angular.z = angle_to_goal > 0 ? std::min(angle_to_goal, max_in_place_yawrate_)
-                                                  : std::max(angle_to_goal, -max_in_place_yawrate_);
-            cmd_vel.angular.z = cmd_vel.angular.z > 0 ? std::max(cmd_vel.angular.z, min_in_place_yawrate_)
-                                                      : std::min(cmd_vel.angular.z, -min_in_place_yawrate_);
-            best_traj.first = generate_trajectory(cmd_vel.angular.z, goal);
-            trajectories.push_back(best_traj);
-        }
-        else
-        {
-            best_traj.first = dwa_planning(goal, trajectories);
-            cmd_vel.linear.x = best_traj.first.front().velocity_;
-            cmd_vel.angular.z = best_traj.first.front().yawrate_;
-        }
+        best_traj.first = dwa_planning(goal, trajectories);
+        // int len_traj = best_traj.first.size();
+        // int idx = len_traj / 2;
+        cmd_vel.linear.x = best_traj.first.front().velocity_;
+        cmd_vel.linear.y = best_traj.first.front().yawrate_;
+        // cmd_vel.linear.x = best_traj.first.front().velocity_;
+        // cmd_vel.angular.z = best_traj.first.front().yawrate_;
     }
     else // has reached target
     {
         has_reached_ = true;
-        if (turn_direction_th_ < fabs(goal[2]))
-        {
-            cmd_vel.angular.z =
-                goal[2] > 0 ? std::min(goal[2], max_in_place_yawrate_) : std::max(goal[2], -max_in_place_yawrate_);
-            cmd_vel.angular.z = cmd_vel.angular.z > 0 ? std::max(cmd_vel.angular.z, min_in_place_yawrate_)
-                                                      : std::min(cmd_vel.angular.z, -min_in_place_yawrate_);
-        }
-        else
-        {
-            has_finished_.data = true;
-            has_reached_ = false;
-        }
+        has_finished_.data = true;
+        has_reached_ = false;
+
         best_traj.first = generate_trajectory(cmd_vel.linear.x, cmd_vel.angular.z);
         trajectories.push_back(best_traj);
     }
@@ -466,16 +473,29 @@ DWAPlanner::Window DWAPlanner::calc_dynamic_window(void)
 {
     Window window;
     window.min_velocity_ = std::max((current_cmd_vel_.linear.x - max_deceleration_ * sim_period_), min_velocity_);
-    window.max_velocity_ = std::min((current_cmd_vel_.linear.x + max_acceleration_ * sim_period_), target_velocity_);
+    window.max_velocity_ = std::min((current_cmd_vel_.linear.x + max_acceleration_ * sim_period_), max_velocity_);
+    // window.min_velocity_ = min_velocity_;
+    // window.max_velocity_ = max_velocity_;
     window.min_yawrate_ = std::max((current_cmd_vel_.angular.z - max_d_yawrate_ * sim_period_), -max_yawrate_);
     window.max_yawrate_ = std::min((current_cmd_vel_.angular.z + max_d_yawrate_ * sim_period_), max_yawrate_);
     return window;
 }
 
 float DWAPlanner::calc_to_goal_cost(const std::vector<State> &traj, const Eigen::Vector3d &goal)
-{
-    Eigen::Vector3d last_position(traj.back().x_, traj.back().y_, traj.back().yaw_);
-    return (last_position.segment(0, 2) - goal.segment(0, 2)).norm();
+{   
+    // TODO: select the smallest cost on the trajectory
+    double minimum_dist = 1e6;
+    for (int i = 0; i < traj.size(); i++)
+    {
+        Eigen::Vector3d last_position(traj[i].x_, traj[i].y_, traj[i].yaw_);
+        float dist = (last_position.segment(0, 2) - goal.segment(0, 2)).norm();
+        if (dist < minimum_dist)
+            minimum_dist = dist;
+    }
+    return minimum_dist;
+
+    // Eigen::Vector3d last_position(traj.back().x_, traj.back().y_, traj.back().yaw_);
+    // return (last_position.segment(0, 2) - goal.segment(0, 2)).norm();
 }
 
 float DWAPlanner::calc_obs_cost(const std::vector<State> &traj)
@@ -489,14 +509,17 @@ float DWAPlanner::calc_obs_cost(const std::vector<State> &traj)
             if (use_footprint_)
                 dist = calc_dist_from_robot(obs.position, state);
             else
-                dist = hypot((state.x_ - obs.position.x), (state.y_ - obs.position.y)) - robot_radius_ - footprint_padding_;
+                // dist = hypot((state.x_ - obs.position.x), (state.y_ - obs.position.y)) - robot_radius_ - footprint_padding_;
+                dist = hypot((state.x_ - obs.position.x), (state.y_ - obs.position.y)) - robot_radius_;
 
             if (dist < DBL_EPSILON)
                 return 1e6;
             min_dist = std::min(min_dist, dist);
         }
     }
-    return obs_range_ - min_dist;
+    if (min_dist >= obs_range_)
+        return 0.0;
+    return obs_range_ - min_dist; // todo:
 }
 
 float DWAPlanner::calc_speed_cost(const std::vector<State> &traj)
@@ -542,8 +565,6 @@ std::vector<DWAPlanner::State> DWAPlanner::generate_trajectory(const double velo
 // this function only seems simulate in place rotation given yawrate
 std::vector<DWAPlanner::State> DWAPlanner::generate_trajectory(const double yawrate, const Eigen::Vector3d &goal)
 {
-    const double target_direction = atan2(goal.y(), goal.x()) > 0 ? sim_direction_ : -sim_direction_;
-    const double predict_time = target_direction / (yawrate + DBL_EPSILON);
     std::vector<State> trajectory;
     trajectory.resize(sim_time_samples_);
     State state;
@@ -554,6 +575,26 @@ std::vector<DWAPlanner::State> DWAPlanner::generate_trajectory(const double yawr
     }
     return trajectory;
 }
+
+// this function only seems simulate in place rotation given yawrate
+std::vector<DWAPlanner::State> DWAPlanner::generate_omni_trajectory(const double xVelocity, const double yVelocity)
+{
+    std::vector<State> trajectory;
+    trajectory.resize(sim_time_samples_);
+    State state;
+
+    const double sim_time_step = predict_time_ / static_cast<double>(sim_time_samples_);
+    for (int i = 0; i < sim_time_samples_; i++)
+    {
+        state.x_ += xVelocity * sim_time_step;
+        state.y_ += yVelocity * sim_time_step;
+        state.velocity_ = xVelocity;
+        state.yawrate_ = yVelocity;
+        trajectory[i] = state;
+    }
+    return trajectory;
+}
+
 
 DWAPlanner::Cost DWAPlanner::evaluate_trajectory(const std::vector<State> &trajectory, const Eigen::Vector3d &goal)
 {
