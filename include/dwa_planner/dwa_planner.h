@@ -318,6 +318,15 @@ public:
    */
   std::vector<State> generate_trajectory(const double yawrate, const Eigen::Vector3d &goal);
 
+
+  /**
+   * @brief Generate trajectory
+   * @param yawrate The angular velocity of robot
+   * @param goal The pose of goal
+   * @return The generated trajectory
+   */
+  std::vector<State> generate_omni_trajectory(const double xVelocity, const double yVelocity);
+
   /**
    * @brief Evaluate trajectory
    * @param trajectory The estimated trajectory
