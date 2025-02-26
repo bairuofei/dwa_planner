@@ -1,17 +1,18 @@
-# dwa_planner
+# dwa_planner with omni-directional model
 
-[![CI](https://github.com/amslabtech/dwa_planner/workflows/CI/badge.svg)](https://github.com/amslabtech/dwa_planner/actions)
-[![issue_opened](https://img.shields.io/github/issues/amslabtech/dwa_planner.svg)](https://github.com/amslabtech/dwa_planner/issues?q=is%3Aopen+is%3Aissue)
-[![issue_closed](https://img.shields.io/github/issues-closed/amslabtech/dwa_planner.svg)](https://github.com/amslabtech/dwa_planner/issues?q=is%3Aissue+is%3Aclosed)
 
 ## Overview
+
+> Note in this repo, the code does not have an explicit map of the environment. If no local map is provided, the 2D laser scan will only serve as obstacle points for candidate trajectory evaluation.
+
+> Also, dwa_planner is only a local planner. If a goal cannot be accessed by directly moving toward the goal, the robot is likely to be trapped in a local minima. If a global planner is available (which may require local or gloal map of environments), it can serve intermediate waypoints for the dwa_planner.
+
+
 ROS implementation of DWA(Dynamic Window Approach) Planner
 
 The API documentation is available at [https://amslabtech.github.io/dwa_planner/](https://amslabtech.github.io/dwa_planner/)
 
-**Note: This simulator is not provided.**
 
-![demo 1](docs/images/dwa_planner_demo_1.gif)
 
 ## Environment
 - Ubuntu 20.04
@@ -21,7 +22,7 @@ The API documentation is available at [https://amslabtech.github.io/dwa_planner/
 ```
 # clone repository
 cd /path/to/your/catkin_ws/src
-git clone https://github.com/amslabtech/dwa_planner.git
+git clone git@github.com:bairuofei/dwa_planner.git
 
 # build
 cd /path/to/your/catkin_ws
@@ -31,18 +32,13 @@ catkin build dwa_planner -DCMAKE_BUILD_TYPE=Release     # Release build is recom
 
 ## How to use
 ```
-roslaunch dwa_planner local_planner.launch
+# this step only launchs a node named: /local_planner/dwa_planner
+roslaunch dwa_planner dwa.launch
 ```
+The dwa_planner also needs other information from simulation environment, shown below:
 
-## Running the demo with docker
-```
-git clone https://github.com/amslabtech/dwa_planner.git && cd dwa_planner
+![demo 1](docs/images/dwa_node_graph.png)
 
-# build an image, create a container and start demo (Ctrl-c: stop a container and exit)
-docker compose up
-# remove a container
-docker compose down
-```
 
 ## Running the demo without docker
 ### Using simulator
@@ -72,6 +68,10 @@ Access [here](docs/Topics.md)
 
 ### Runtime requirement
 - TF (from GLOBAL_FRAME to ROBOT_FRAME) is required
+
+### demo
+
+![demo 1](docs/images/dwa_planner_demo_1.gif)
 
 ## Parameters
 Access [here](docs/Parameters.md)
