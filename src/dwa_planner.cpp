@@ -85,6 +85,7 @@ void DWAPlanner::Cost::show(void)
 
 void DWAPlanner::Cost::calc_total_cost(void) { total_cost_ = obs_cost_ + to_goal_cost_ + speed_cost_ + path_cost_; }
 
+// transform goal message into global_frame
 void DWAPlanner::goal_callback(const geometry_msgs::PoseStampedConstPtr &msg)
 {
     goal_msg_ = *msg;
@@ -472,10 +473,10 @@ bool DWAPlanner::check_collision(const std::vector<State> &traj)
 DWAPlanner::Window DWAPlanner::calc_dynamic_window(void)
 {
     Window window;
-    window.min_velocity_ = std::max((current_cmd_vel_.linear.x - max_deceleration_ * sim_period_), min_velocity_);
-    window.max_velocity_ = std::min((current_cmd_vel_.linear.x + max_acceleration_ * sim_period_), max_velocity_);
-    // window.min_velocity_ = min_velocity_;
-    // window.max_velocity_ = max_velocity_;
+    // window.min_velocity_ = std::max((current_cmd_vel_.linear.x - max_deceleration_ * sim_period_), min_velocity_);
+    // window.max_velocity_ = std::min((current_cmd_vel_.linear.x + max_acceleration_ * sim_period_), max_velocity_);
+    window.min_velocity_ = min_velocity_;
+    window.max_velocity_ = max_velocity_;
     window.min_yawrate_ = std::max((current_cmd_vel_.angular.z - max_d_yawrate_ * sim_period_), -max_yawrate_);
     window.max_yawrate_ = std::min((current_cmd_vel_.angular.z + max_d_yawrate_ * sim_period_), max_yawrate_);
     return window;
