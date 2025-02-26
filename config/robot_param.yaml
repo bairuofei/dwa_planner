@@ -8,8 +8,8 @@ FOOTPRINT_PADDING: 0.01 # [m], If localmap contains padding, you should set this
 # Robot Configuration Parameters
 MAX_VELOCITY: 1.0         # [m/s]
 MIN_VELOCITY: -1.0         # [m/s]
-MAX_YAWRATE: 3.14.0          # [rad/s]
-MIN_YAWRATE: -3.14.0         # [rad/s]
+MAX_YAWRATE: 3.14       # [rad/s]
+MIN_YAWRATE: -3.14         # [rad/s]
 MAX_IN_PLACE_YAWRATE: 0.6 # [rad/s]
 MIN_IN_PLACE_YAWRATE: -0.6 # [rad/s]
 MAX_ACCELERATION: 1.0     # [m/s^2]
