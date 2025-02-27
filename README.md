@@ -32,8 +32,14 @@ catkin build dwa_planner -DCMAKE_BUILD_TYPE=Release     # Release build is recom
 
 ## How to use
 ```
+# First, you should start an outside simulation environment (not provided in this repo)
+roslaunch vehicle_simulator run_one.launch
+
+
 # this step only launchs a node named: /local_planner/dwa_planner
 roslaunch dwa_planner dwa.launch
+
+# You can now control the robot by cliking 2D goal in RVIZ
 ```
 The dwa_planner also needs other information from simulation environment, shown below:
 
