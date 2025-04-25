@@ -14,11 +14,6 @@ ROS implementation of DWA(Dynamic Window Approach) Planner
 
 The API documentation is available at [https://amslabtech.github.io/dwa_planner/](https://amslabtech.github.io/dwa_planner/)
 
-## Usage
-1. Launch a p2os_urdf package to start one-robot simulation environment;
-2. Launch `roslaunch dwa_planner dwa.launch` to start dwa planner;
-3. Use RVIZ to publish target point to the dwa planner.
-
 
 ## Environment
 - Ubuntu 20.04
@@ -36,7 +31,11 @@ rosdep install -riy --from-paths src --rosdistro noetic # Install dependencies
 catkin build dwa_planner -DCMAKE_BUILD_TYPE=Release     # Release build is recommended
 ```
 
-## How to use
+## Usage
+
+1. Launch a p2os_urdf package to start one-robot simulation environment;
+2. Launch `roslaunch dwa_planner dwa.launch` to start dwa planner;
+3. Use RVIZ to publish target point to the dwa planner.
 ```
 # First, you should start an outside simulation environment (not provided in this repo)
 roslaunch vehicle_simulator run_one.launch
