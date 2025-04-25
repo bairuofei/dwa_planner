@@ -1,6 +1,8 @@
 # dwa_planner with omni-directional model
 
 
+![dwa_demo](docs/images/demo_dwa.gif)
+
 ## Overview
 
 > Note in this repo, the code does not have an explicit map of the environment. If no local map is provided, the 2D laser scan will only serve as obstacle points for candidate trajectory evaluation.
