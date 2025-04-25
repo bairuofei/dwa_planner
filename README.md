@@ -51,6 +51,10 @@ The dwa_planner also needs other information from simulation environment, shown 
 ![demo 1](docs/images/dwa_node_graph.png)
 
 
+
+
+---
+# Previous README (not for this modified repo)
 ## Running the demo without docker
 ### Using simulator
 ```
