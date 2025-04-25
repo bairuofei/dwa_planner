@@ -1,5 +1,5 @@
 # Target Parameters
-TARGET_VELOCITY: 1.0 # [m/s]
+TARGET_VELOCITY: 2.0 # [m/s]
 
 # Simulation Parameters
 PREDICT_TIME: 3.0     # [s]   # future time to predict

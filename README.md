@@ -12,6 +12,10 @@ ROS implementation of DWA(Dynamic Window Approach) Planner
 
 The API documentation is available at [https://amslabtech.github.io/dwa_planner/](https://amslabtech.github.io/dwa_planner/)
 
+## Usage
+1. Launch a p2os_urdf package to start one-robot simulation environment;
+2. Launch `roslaunch dwa_planner dwa.launch` to start dwa planner;
+3. Use RVIZ to publish target point to the dwa planner.
 
 
 ## Environment

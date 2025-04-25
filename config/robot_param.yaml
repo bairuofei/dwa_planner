@@ -6,8 +6,8 @@ ROBOT_RADIUS: 0.35       # [m], If param "USE_FOOTPRINT" is set to true, this pa
 FOOTPRINT_PADDING: 0.01 # [m], If localmap contains padding, you should set this param to 0.0
 
 # Robot Configuration Parameters
-MAX_VELOCITY: 1.0         # [m/s]
-MIN_VELOCITY: -1.0         # [m/s]
+MAX_VELOCITY: 2.0         # [m/s]
+MIN_VELOCITY: -2.0         # [m/s]
 MAX_YAWRATE: 3.14       # [rad/s]
 MIN_YAWRATE: -3.14         # [rad/s]
 MAX_IN_PLACE_YAWRATE: 0.6 # [rad/s]
